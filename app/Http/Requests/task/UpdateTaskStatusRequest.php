@@ -4,16 +4,17 @@ namespace App\Http\Requests\task;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class StoreTaskRequest extends FormRequest
+class UpdateTaskStatusRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
-    public function authorize(): bool
+    public function authorize(Request $request): bool
     {
-        return Auth::user()->isManager();
+        return Auth::user()->role == 'manager' || ( Auth::user()->role === 'user' && $request->task->assignee->id == Auth::id() );
     }
 
     /**
@@ -24,12 +25,7 @@ class StoreTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string|min:3|max:60',
-            'description' => 'nullable|string|min:3|max:255',
-            'status' => 'string|in:pending,completed,canceled',
-            'assignee_id' => 'required|exists:users,id',
-            'created_by_id' => 'exists:users,id',
-            'due_date' => 'date',
+            'status' => 'required|in:pending,completed,canceled',
         ];
     }
 }

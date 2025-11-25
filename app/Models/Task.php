@@ -6,6 +6,7 @@ use App\Http\Controllers\TaskDependencyController;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -23,8 +24,8 @@ class Task extends Model
         'description',
         'status',
         'due_date',
-        'assignee',
-        'created_by',
+        'assignee_id',
+        'created_by_id',
     ];
 
     /**
@@ -59,10 +60,20 @@ class Task extends Model
         return $this->hasMany(TaskDependency::class, 'depends_on_id');
     }
 
+    public function dependencyTasks(): BelongsToMany
+    {
+        return $this->belongsToMany(Task::class, 'task_dependencies', 'task_id', 'depends_on_id');
+    }
+
+    public function dependentsTasks(): BelongsToMany
+    {
+        return $this->belongsToMany(Task::class, 'task_dependencies', 'depends_on_id', 'task_id');
+    }
+
     public function allDependenciesCompleted(): bool
     {
-        return $this->dependencies->every(function ($dependency) {
-            return $dependency->task->status === 'completed';
+        return $this->dependencyTasks->every(function ($task) {
+            return $task->status === 'completed';
         });
     }
 

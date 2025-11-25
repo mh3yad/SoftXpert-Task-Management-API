@@ -19,20 +19,16 @@ class TaskResource extends JsonResource
             'title' => $this->title,
             'description' => $this->description,
             'status' => $this->status,
-            'assignee' => new UserResource($this->whenLoaded('assignee')),
-            'creator' => new UserResource($this->whenLoaded('creator')),
-            'due_date' => $this->due_date,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'due_date' => date_format($this->due_date,'Y M d H:i:s'),
+            'dependencies_completed' => $this->allDependenciesCompleted(),
             'additional_info' => [
-                'dependencies' => [
-                     TaskDependencyResource::collection($this->whenLoaded('dependencies'))
-                ],
-                'dependents' => [
-                     TaskDependencyResource::collection($this->whenLoaded('dependents'))
-                ]
+                'assignee' => new UserResource($this->whenLoaded('assignee')),
+                'creator' => new UserResource($this->whenLoaded('creator')),
+                'dependencies' => TaskDependencyResource::collection($this->whenLoaded('dependencies')),
+                'dependents' => TaskDependencyResource::collection($this->whenLoaded('dependents'))
             ],
-            'dependencies_completed' => $this->allDependenciesCompleted()
+            'created_at' => date_format($this->created_at,'Y M d H:i:s'),
+            'updated_at' => date_format($this->updated_at,'Y M d H:i:s')
         ];
     }
 }
