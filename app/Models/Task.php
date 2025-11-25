@@ -77,4 +77,15 @@ class Task extends Model
         });
     }
 
+    public function scopeFilter($query, array $filters) {
+            $query->when($filters['status'] ?? null,function ($query, $status) {
+                $query->where('status', $status);
+            })->when($filters['due_date_from'] ?? null, function ($query, $dueDateFrom) {
+                $query->where('due_date', '>=', $dueDateFrom);
+            })->when($filters['due_date_to'] ?? null, function ($query, $dueDateTo) {
+                $query->where('due_date', '<=', $dueDateTo);
+            })->when($filters['assignee_id'] ?? null, function ($query, $assigneeId) {
+                $query->where('assignee_id', $assigneeId); });
+            }
+
 }

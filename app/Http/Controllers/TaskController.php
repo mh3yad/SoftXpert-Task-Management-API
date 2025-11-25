@@ -15,37 +15,20 @@ use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
+        $query = Task::with(['assignee', 'creator', 'dependencyTasks']);
 
-//       return TaskResource::collection(Task::with(['assignee','creator','dependencies','dependents'])->get());
-        $query = Task::with(['assignee','creator','dependencies','dependents']);
-        // If user is not a manager, only show assigned tasks
-        if (Auth::user()->role !== 'manager') {
-            $query->where('assignee_id', Auth::id());
-        }
-
-        // Filter by status
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
+        // Apply filters
+        if ($request->user()->isUser()) {
+            // Users can only see tasks assigned to them
+            $query->where('assignee_id', $request->user()->id);
         }
 
-        // Filter by due date range
-        if ($request->has('due_date_from')) {
-            $query->where('due_date', '>=', $request->due_date_from);
-        }
-        if ($request->has('due_date_to')) {
-            $query->where('due_date', '<=', $request->due_date_to);
-        }
-
-        // Filter by assigned user (only for managers)
-        if ($request->has('assignee_id') && Auth::user()->role === 'manager') {
-            $query->where('assignee_id', $request->assignee_id);
-        }
-       return TaskResource::collection($query->get());
+        $tasks = $query->filter($request->only(['status', 'due_date_from', 'due_date_to', 'assignee_id']))
+            ->latest()
+            ->paginate(10);
+       return TaskResource::collection($tasks);
     }
 
     /**

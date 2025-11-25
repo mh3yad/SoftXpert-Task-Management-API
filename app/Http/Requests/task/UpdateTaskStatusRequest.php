@@ -14,7 +14,10 @@ class UpdateTaskStatusRequest extends FormRequest
      */
     public function authorize(Request $request): bool
     {
-        return Auth::user()->role == 'manager' || ( Auth::user()->role === 'user' && $request->task->assignee->id == Auth::id() );
+        if (auth()->user()->isUser()) {
+            return auth()->user()->id === $request->task->assignee_id;
+        }
+        return auth()->user()->isManager();
     }
 
     /**
