@@ -11,7 +11,6 @@ use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
@@ -19,7 +18,7 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request)
     {
 
 //       return TaskResource::collection(Task::with(['assignee','creator','dependencies','dependents'])->get());
@@ -27,6 +26,24 @@ class TaskController extends Controller
         // If user is not a manager, only show assigned tasks
         if (Auth::user()->role !== 'manager') {
             $query->where('assignee_id', Auth::id());
+        }
+
+        // Filter by status
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by due date range
+        if ($request->has('due_date_from')) {
+            $query->where('due_date', '>=', $request->due_date_from);
+        }
+        if ($request->has('due_date_to')) {
+            $query->where('due_date', '<=', $request->due_date_to);
+        }
+
+        // Filter by assigned user (only for managers)
+        if ($request->has('assignee_id') && Auth::user()->role === 'manager') {
+            $query->where('assignee_id', $request->assignee_id);
         }
        return TaskResource::collection($query->get());
     }
